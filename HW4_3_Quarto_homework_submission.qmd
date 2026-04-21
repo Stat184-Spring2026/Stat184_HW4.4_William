@@ -1,0 +1,352 @@
+library (tinytex)
+
+---
+title: "Homework 4_3"
+author: "William Dong"
+date: "Apirl 14 2026"
+date-modified: now
+format: 
+  docx
+execute: 
+  echo: false
+  warning: false
+---
+### Running Code
+
+## Busiest Airport
+
+# This section analyzes passenger traffic trends from 2020 through 2025 from six major international airports. These airports were selected to provide a diverse representation of global air travel across different regions and time periods.
+#The goal of this analysis is to understand how passenger volumes changed alongside the time period, mainly in response to major global disruptions, and to compare how different was the recovery from said across airports.
+```{r}
+# Busiest Passenger Airports ----
+## Create two data visualizations (one table and one plot) for six
+## of the busiest passenger airports in the world, across the years 2020-2025.
+
+# Step 1: Load Packages ----
+library(rvest)
+library(tidyverse)
+library(knitr)
+
+# Step 2: Get the Data ----
+airportWikiData <- read_html(
+  x = "https://en.wikipedia.org/wiki/List_of_busiest_airports_by_passenger_traffic"
+) |>
+  html_elements(css = "table") |>
+  html_table()
+
+## Step 2b: Extract data and add year columns
+airports_2025 <- airportWikiData[[2]] |>
+  mutate(
+    year = 2025,
+    .before = Rank
+  )
+
+airports_2024 <- airportWikiData[[3]] |>
+  mutate(
+    year = 2024,
+    .before = Rank
+  )
+
+airports_2023 <- airportWikiData[[4]] |>
+  mutate(
+    year = 2023,
+    .before = Rank
+  )
+
+airports_2022 <- airportWikiData[[5]] %>%
+  mutate(
+    year = 2022,
+    .before = Rank
+  )
+
+airports_2021 <- airportWikiData[[6]] |>
+  mutate(
+    year = 2021,
+    .before = Rank
+  )
+
+airports_2020 <- airportWikiData[[7]]
+colnames(airports_2020)[colnames(airports_2020) == ""] <- "empty"
+airports_2020$year <- 2020
+
+## Step 2c: Combine data frames & 2e: filter to target airports
+### Split Airport codes to separate columns
+### Fix column names and convert passengers, rank change, & percent change to numbers
+
+targetAirports <- c("ATL", "FRA", "PKX", "PHX", "ORD", "LHR")
+
+airportData6 <- bind_rows(
+  airports_2020,
+  airports_2021,
+  airports_2022,
+  airports_2023,
+  airports_2024,
+  airports_2025
+) |>
+  rename( # Fix column names
+    passengers = Totalpassengers,
+    percentChange = `%change`
+  ) |>
+  separate_wider_delim( # Split airport codes apart
+    cols = `Code(IATA/ICAO)`,
+    delim = "/",
+    names = c("IATA", "ICAO"),
+    too_few = "align_start",
+    too_many = "merge"
+  ) |>
+  filter(IATA %in% targetAirports) |>
+  mutate( # Convert numbers to numbers
+    across(
+      .cols = c(passengers, percentChange),
+      .fns = ~parse_number(.x)
+    )
+  )
+```
+
+## Passenger Table
+
+#The table summarizes total annual passenger counts for each airport across the six-year period. N/A shows that the airport at that year did not rank within the top 50.
+#ATL consistently appears at the top, showing how it is one of the busiest airports in the world. In contrast, airports such as PHX and PKX show more uncertanity in both ranking and passenger volume.
+```{r}
+# Step 3: Make a Table 
+airportData6_wide <- airportData6 |>
+  select(year, Airport, IATA, passengers) |>
+  pivot_wider(
+    names_from = year,
+    values_from = passengers
+  )
+
+# Print simple table
+print(airportData6_wide)
+```
+
+## Passenger Plot/Graph
+#The line graph highlights trends in passenger traffic over time. A sharp decline is visible across all airports in 2020, followed by varying degrees of recovery. ATL demonstrates the strongest and fastest rebound, returning to high passenger volumes by 2023. PHX shows relatively stable growth, suggesting resilience driven by domestic travel demand. Meanwhile, FRA and LHR recover more gradually, likely reflecting their dependence on international travel.
+
+#Overall, the visualization emphasizes both the global impact of disruptions in 2020 and the uneven recovery patterns across different regions
+```{r}
+# Step 4: Make a Plot ----
+psuPalette <- c("#1E407C", "#BC204B", "#3EA39E", "#E98300",
+                "#999999", "#AC8DCE", "#F2665E", "#99CC00")
+
+airportData6 |>
+  mutate(
+    passengers_mil = passengers / 1000000
+  ) |>
+  ggplot(
+    mapping = aes(
+      x = year,
+      y = passengers_mil,
+      group = IATA,
+      color = IATA,
+      linetype = IATA
+    )
+  ) +
+  geom_point() +
+  geom_path() +
+  theme_bw() +
+  labs(
+    x = "Year",
+    y = "Total passengers (in millions)",
+    title = "Total Annual Passengers 2020-2025 for Six Busy Airports",
+    color = "Airport",
+    linetype = "Airport",
+    alt = "Line graph showing passenger trends at six busy airports from 2020 to 2025."
+  ) +
+  scale_color_manual(values = psuPalette) +
+  theme(
+    legend.position = "bottom",
+    legend.key.width = unit(2, "cm"),
+    legend.key.height = unit(0.25, "cm")
+  )
+```
+
+\newpage
+
+## Monte Carlo Numerical Integration
+
+#Numerical integration refers to the process of evaluating a definite integral and getting a number. This is useful when dealing with complex functions or high-dimensional integrals where traditional methods become difficult to apply.
+```{r}
+#' Monte Carlo Simulation of Points
+#'
+#' @description
+#' Create a function that will generate some number of randomly selected points
+#' within provied bounds
+#'
+#' @param xbounds num A numeric vector providing the lower and upper bounds for x
+#' @param ybounds num A numeric vector providing the lower and upper bounds for y
+#' @param n num A number detailing how many points to randomly generate
+#'
+#' @returns A data frame of randomly generated ordered pairs.
+#'
+#' @details
+#' This function will create a data frame of `n` randomly generated points. The
+#' points will have x-coordinates uniformly sampled from `xbounds`, inclusive,
+#' while the y-coordinates will be uniformly from `ybounds`.
+#'
+generatePoints <- function(xbounds, ybounds, n){
+  # We will assume that x-/ybounds are in increasing order. We could add
+  # a check step if necessary
+  randPoints <- data.frame(
+    x = runif(n = n, min = xbounds[1], max = xbounds[2]),
+    y = runif(n = n, min = ybounds[1], max = ybounds[2])
+  )
+
+  return(randPoints)
+}
+```
+
+# Monte Carlo Plots/Graphs
+#The results demonstrate that Monte Carlo methods improve in accuracy as the number of simulations increases. However, even with large samples, slight variation remains due to randomness. Overall, the table shows that Monte Carlo Plots/Graphs is a powerful and flexible tool for numerical approximation.
+```{r}
+# Step 1: Load Packages ----
+# install.packages('patchwork')
+library(ggplot2)
+library(patchwork)
+
+# Step 2:Function to create plot for given n(by user)
+mc_plot <- function(n) {
+  # Generate random points
+  x_random <- runif(n, 0, 20)
+  
+  y_random <- runif(n, 0, 0.16)
+  
+  # Get curve height at each x
+  curve_height <- dchisq(x_random, df = 5)
+  
+  # Check if point is under the curve
+  under_curve <- y_random <= curve_height
+  
+# Step 3: Define PSU Palette ----
+    ggplot() +
+    geom_point(aes(x_random, y_random, color = under_curve), alpha = 0.5, size = 0.5) +
+    stat_function(fun = dchisq, args = list(df = 5), color = "black") +
+    labs(
+      title = paste("n =", n),
+      x = "x",
+      y = "Density",
+      color = "Under Curve?"
+    ) +
+    theme_minimal()
+}
+
+# Create four plots
+p10 <- mc_plot(10)
+p100 <- mc_plot(100)
+p1000 <- mc_plot(1000)
+p10000 <- mc_plot(10000)
+
+# Combine
+p10 + p100 + p1000 + p10000
+
+```
+
+\newpage
+
+## Planning and Prompting genAI
+#Full Plan(Goals,Needs and Steps)
+
+#Goal
+#Convert the dataset into a tidy format and create a visualization that compares how calcium levels change over time.
+
+#Needs
+#Separate variables currently combined in columns, Create a tidy structure with: Participant, Group, Year, Calcium. Handle missing values appropriately, Use a visualization suited for longitudinal data.
+
+#Steps
+#Load the dataset without modifying it, Rename columns to reflect group and year, Add a ID variables, Reshape data from wide to long format, Clean data, remove any missing data. Group the dataset together, Create a line, Make sure that the graph is easily visable and shows differences between groups.
+
+\newpage
+
+#Context-Specific: 
+#-Takes account of possible missing values
+#-Accounts for the fact that the dataset is two different groups
+
+#Planning and Prompting: Generic Responce
+#Prompt used: Make a graph of this calcium dataset. Calcium.csv
+## Response from OpenAI ChatGPT:
+
+## Figure 1: Generic genAI Output
+
+```{r}
+library(tidyverse)
+
+# Step 1: Load data
+calcium <- read.csv("C:/Users/willi/Downloads/calcium.csv")
+
+# Step 2: Name columns
+colnames(calcium) <- c("null_y0", "null_y1", "null_y2", "null_y3",
+                       "treat_y0", "treat_y1", "treat_y2", "treat_y3")
+
+# Step 3: Add participant ID
+calcium$Participant <- 1:nrow(calcium)
+
+# Step 4: Convert wide to long format
+calcium_long <- calcium %>%
+  pivot_longer(
+    cols = -Participant,
+    names_to = c("Group", "Year"),
+    names_sep = "_y",
+    values_to = "Calcium"
+  )
+
+# Step 5: Clean + format
+calcium_long <- calcium_long %>%
+  mutate(
+    Group = ifelse(Group == "null", "Null", "Treatment"),
+    Year = as.numeric(Year)
+  ) %>%
+  drop_na(Calcium)
+
+# Step 6: Compute averages per group per year
+calcium_avg <- calcium_long %>%
+  group_by(Group, Year) %>%
+  summarise(Average_Calcium = mean(Calcium), .groups = "drop")
+
+# Step 7: Line graph of averages
+ggplot(calcium_avg, aes(x = Year, y = Average_Calcium, color = Group)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 3) +
+  labs(
+    title = "Average Calcium Levels Over Time by Group",
+    x = "Year",
+    y = "Average Calcium Level",
+    color = "Group"
+  ) +
+  theme_minimal()
+```
+
+#The plan-informed response successfully completed all requested tasks. It converted the dataset from wide to long format, correctly separating the group and year variables into distinct columns. It then removed missing values and ensured that the data structure followed tidy data principles. Next, it grouped the data by treatment group and year to calculate average calcium levels. Finally, it generated a line plot that clearly displayed how calcium levels changed over time for both groups.The resulting visualization effectively highlighted differences between the null and treatment groups, making it easy to interpret longitudinal trends. The response also included clear explanations and well-structured code, demonstrating a strong understanding of both the dataset and the analytical goal.
+
+\newpage
+
+##Planning and Prompting: Narrative Text
+
+#Tool: ChatGPT (GPT-4.1 via ChatGPT web interface)
+#Date: April 15, 2026
+#Purpose: Help create an R line graph showing column averages and guide RStudio import
+
+#Exact prompt(s):
+#"Provide An appropriate sub-section heading, The provided image(s) with an appropriate label (i.e., "Figure #") and caption, and Narrative text showing the response of the tool.”
+
+#Exact response(s) from ChatGPT:
+
+#Caption:
+#Here’s a clean, rubric-perfect subsection for your Generic Response that includes:
+
+#a proper heading
+#figure label + caption
+#narrative text
+
+#Caption:
+#Figure 1 shows the visualization generated from a generic prompt using a genAI tool. The graph displays calcium measurements but does not clearly distinguish between the null and treatment groups or effectively represent the longitudinal structure of the data over time.
+
+#Narrative Description of the Response
+
+#The output produced from the generic prompt resulted in a basic visualization of the calcium dataset. However, because the prompt lacked specific instructions, the genAI tool did not restructure the data into a tidy format before generating the graph. As a result, the visualization treats the columns as separate variables rather than recognizing the underlying structure of two groups measured across multiple time points.
+
+#This leads to several limitations. First, the graph does not clearly show how calcium levels change over time, which is a key aspect of the study. Second, the distinction between the null group and the treatment group is either unclear or not properly emphasized. Finally, the output includes little to no explanation of how the visualization was created, making it difficult to interpret or validate.
+
+#Overall, the generic response demonstrates that without clear guidance, genAI tools may produce outputs that are technically correct but lack meaningful insight or alignment with the context of the data.
+
+##Reflection
+#This shows many things about using genAI tools. Firstly, the details and deaph of the prompt has an influence on how good the quality of the output. Using clear steps ensures that the AI is able to follow a logical process and produce accurate results. Additonally, this activity demonstrates that genAI tools do not replace analytical thinking. Instead, when used effectively, it can support analysis and mathamatics, but without careful planning it can only produce subpar outputs.
