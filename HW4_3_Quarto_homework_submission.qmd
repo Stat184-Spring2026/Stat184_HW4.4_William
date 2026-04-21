@@ -255,6 +255,18 @@ p10 + p100 + p1000 + p10000
 #Steps
 #Load the dataset without modifying it, Rename columns to reflect group and year, Add a ID variables, Reshape data from wide to long format, Clean data, remove any missing data. Group the dataset together, Create a line, Make sure that the graph is easily visable and shows differences between groups.
 
+## Reproducibility
+
+This project follows Open Science principles as everything can be reproduced by:
+
+1. Opening the .qmd file in RStudio with Quarto installed  
+2. Installing required packages: tidyverse, rvest, knitr, patchwork  
+3. Running the document using Render in a Quarto file within RStudio  
+
+All data is either:
+- Retrieved directly from Wikipedia during execution
+- Or loaded from a local file included in the repository
+
 \newpage
 
 #Context-Specific: 
@@ -271,7 +283,7 @@ p10 + p100 + p1000 + p10000
 library(tidyverse)
 
 # Step 1: Load data
-calcium <- read.csv("C:/Users/willi/Downloads/calcium.csv")
+calcium <- read.csv("calcium.csv")
 
 # Step 2: Name columns
 colnames(calcium) <- c("null_y0", "null_y1", "null_y2", "null_y3",
