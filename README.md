@@ -22,14 +22,17 @@ The plan for this repository includes the analysis of data betweeen human and AI
 - Maintain a clean and organized repository
 - Use branches to test changes
 - Track tasks and progress using GitHub Issues
+- Update the README file.
 - Use commits and pull requests to document changes and improvements
 - Finalize and upload all nessessary QMD and PDF files
 
 ## Repo Structure
 
-
-
+HW 4.3.qmd -> souce containing the code and analysis for Homework 4.3
+HW 4.3.qmd -> pdf redering of report 4.3
+Calcium.csv -> data used for the homework
+ReadME.md -> provides overall details about the homework
 
 ## Authors
-
-Give information about who are the authors of the project and how people can get in touch if they have questions.
+Name:William Dong
+Email: Wvd5138@psu.edu
