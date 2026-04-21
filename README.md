@@ -1,26 +1,33 @@
-# Project Title
+# Stat184_HW_4.4
 
-Write a 1-2 sentences that quickly and clearly convey what your repo is for.
-
+The main goal for this repository is to practice intigrating homework 4.3 into Github. 
 ## Overview
 
-Expand on those introductory sentences with a brief but informative description of your project's purpose and goals. This section should help visitors decide whether they should dig deeper into your repo/project.
+The project analyizes airport trends of the top 6 most visited airports from 2020 to 2025 and also use Monte Carlo simulation to include data analysis, visualizations, and written outputs.
 
 ### Interesting Insight (Optional)
 
-This is optional but highly recommended. You'll include one interesting insight from your project as part of the README. This insight is most effective when you include a visual. Keep in mind that this visual must be included as an image file (e.g., JPG, PNG, etc.). You can export plots created with `{ggplot2}` by using the function `ggsave`.
+One interesting aspect I found with this report was on how the major airports for the top six often times did not stay and left infromaiton. Many of the top 6 often times left data missing leading to missing information.
 
 ## Data Sources and Acknowledgements
 
-Be sure to list where you got any data used within the project. Be sure to acknowledge any one whose work or elements you're drawing upon.
+Airport dataset provided by Wikipedia
+Simulated data generated in R
+Calcium data set provided by Gen AI
 
 ## Current Plan
 
-Provide some information about what you intend to doe with the project. You can additionally refer the visitor to your detailed plan document.
+The plan for this repository includes the analysis of data betweeen human and AI.
+
+- Maintain a clean and organized repository
+- Use branches to test changes
+- Track tasks and progress using GitHub Issues
+- Use commits and pull requests to document changes and improvements
+- Finalize and upload all nessessary QMD and PDF files
 
 ## Repo Structure
 
-Use this section to explain the structure of your repo. This should help visitors quickly figure out where they should look to find certain elements. Further, you can use this space to highlight and briefly explain important/key files in the repo.
+
 
 
 ## Authors
